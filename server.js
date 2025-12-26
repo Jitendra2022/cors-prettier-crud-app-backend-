@@ -4,13 +4,16 @@ import morgan from "morgan";
 import "dotenv/config";
 import connectDB from "./database/db.js";
 import userRoute from "./routes/user.route.js";
+import cookieParser from "cookie-parser";
 const app = express();
 const PORT = process.env.PORT || 8080;
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
+    credentials: true,
   })
 );
+app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(express.json());
 connectDB();

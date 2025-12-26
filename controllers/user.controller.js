@@ -61,17 +61,107 @@ const login = async (req, res) => {
         message: "invalid or wrong password",
       });
     }
-    // Generate access token
+    // Access token (short-lived)
     const accessToken = jwt.sign(
       { _id: existingUser._id },
       process.env.JWT_SECRET_KEY,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
+    // Refresh token (long-lived)
+    const refreshToken = jwt.sign(
+      { _id: existingUser._id },
+      process.env.JWT_REFRESH_SECRET_KEY,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN }
+    );
+    // Save tokens in cookies
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
     res.status(200).json({
       success: true,
       message: "Login successful!",
       user: existingUser,
       accessToken,
+      refreshToken,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong!",
+      error: err.message,
+    });
+  }
+};
+const logout = async (req, res) => {
+  try {
+    // Clear refresh token cookie
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    // Clear access token cookie (optional but recommended)
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully!",
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong!",
+      error: err.message,
+    });
+  }
+};
+
+const refreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "NO refresh token provided ",
+      });
+    }
+    // Verify refresh token
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET_KEY
+    );
+    // Find user by ID from token
+    const user = await User.findById(decoded._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    // Generate new access token
+    const newAccessToken = jwt.sign(
+      { _id: user._id },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+    res.status(200).json({
+      success: true,
+      user,
+      accessToken: newAccessToken,
     });
   } catch (err) {
     console.error(err);
@@ -218,4 +308,13 @@ const updateById = async (req, res) => {
   }
 };
 
-export { register, login, getUsers, getUserById, deleteUserById, updateById };
+export {
+  register,
+  login,
+  getUsers,
+  getUserById,
+  deleteUserById,
+  updateById,
+  refreshToken,
+  logout,
+};
