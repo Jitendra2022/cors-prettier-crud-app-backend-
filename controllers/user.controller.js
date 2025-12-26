@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
-import mongoose from "mongoose";
 import { comparePassword, hashPassword } from "../utils/password.util.js";
 import jwt from "jsonwebtoken";
+import isValidObjectId from "../utils/validateObjectId.util.js";
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -26,7 +26,7 @@ const register = async (req, res) => {
     });
     res.status(201).json({
       success: true,
-      message: "registration successfully!",
+      message: "Registration successfully!",
       user: newUser,
     });
   } catch (err) {
@@ -51,7 +51,7 @@ const login = async (req, res) => {
     if (!existingUser) {
       return res.status(400).json({
         success: false,
-        message: "User not found",
+        message: "User not found!",
       });
     }
     const isMatch = await comparePassword(password, existingUser.password);
@@ -100,9 +100,8 @@ const getUsers = async (req, res) => {
 };
 const getUserById = async (req, res) => {
   try {
-    const id = req.params.id;
-    // Validate MongoDB ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid user ID",
@@ -112,7 +111,7 @@ const getUserById = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: "User not found!",
       });
     }
     res.status(200).json({
@@ -130,9 +129,8 @@ const getUserById = async (req, res) => {
 };
 const deleteUserById = async (req, res) => {
   try {
-    const id = req.params.id;
-    // Validate MongoDB ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid user ID",
@@ -142,7 +140,7 @@ const deleteUserById = async (req, res) => {
     if (!deletedUser) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: "User not found!",
       });
     }
     res.status(200).json({
@@ -159,4 +157,65 @@ const deleteUserById = async (req, res) => {
     });
   }
 };
-export { register, login, getUsers, getUserById, deleteUserById };
+
+const updateById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+    }
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required!",
+      });
+    }
+
+    // 1️⃣ Find existing user
+    const existingUser = await User.findById(id);
+
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    // 2️⃣ Check email only if changed
+    if (existingUser.email !== email) {
+      const emailExists = await User.findOne({ email });
+
+      if (emailExists) {
+        return res.status(409).json({
+          success: false,
+          message: "Email already in use!",
+        });
+      }
+    }
+    const hashed = await hashPassword(password);
+    // 3️⃣ Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { name, email, password: hashed },
+      { new: true }
+    );
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully!",
+      user: updatedUser,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+export { register, login, getUsers, getUserById, deleteUserById, updateById };
