@@ -3,6 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import "dotenv/config";
 import connectDB from "./database/db.js";
+import userRoute from "./routes/user.route.js";
 const app = express();
 const PORT = process.env.PORT || 8080;
 app.use(
@@ -16,6 +17,7 @@ connectDB();
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
+app.use("/api/v1", userRoute);
 app.listen(PORT, () => {
   console.log(`Server is listning at port:http://localhost:${PORT}`);
 });
