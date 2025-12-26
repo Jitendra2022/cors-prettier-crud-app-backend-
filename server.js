@@ -18,6 +18,14 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 app.use("/api/v1", userRoute);
+// 404 handler (unmatched routes)
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "No routes matched",
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is listning at port:http://localhost:${PORT}`);
 });
