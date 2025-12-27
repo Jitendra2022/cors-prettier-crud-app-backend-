@@ -73,17 +73,15 @@ const login = async (req, res) => {
       process.env.JWT_REFRESH_SECRET_KEY,
       { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN }
     );
+    // Cookie options
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    };
     // Save tokens in cookies
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
+    res.cookie("accessToken", accessToken, cookieOptions);
+    res.cookie("refreshToken", refreshToken, cookieOptions);
     res.status(200).json({
       success: true,
       message: "Login successful!",
@@ -102,19 +100,17 @@ const login = async (req, res) => {
 };
 const logout = async (req, res) => {
   try {
-    // Clear refresh token cookie
-    res.clearCookie("refreshToken", {
+    // Cookie options
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-    });
+    };
+    // Clear refresh token cookie
+    res.clearCookie("refreshToken", cookieOptions);
 
     // Clear access token cookie (optional but recommended)
-    res.clearCookie("accessToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
+    res.clearCookie("accessToken", cookieOptions);
 
     res.status(200).json({
       success: true,
