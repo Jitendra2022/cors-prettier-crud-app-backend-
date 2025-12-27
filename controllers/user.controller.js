@@ -2,15 +2,22 @@ import User from "../models/user.model.js";
 import { comparePassword, hashPassword } from "../utils/password.util.js";
 import jwt from "jsonwebtoken";
 import isValidObjectId from "../utils/validateObjectId.util.js";
+import {
+  registerValidation,
+  loginValidation,
+} from "../validation/user.validation.js";
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
+    // 1️⃣ Validate incoming data
+    const { error } = registerValidation.validate(req.body);
+    if (error) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required!",
+        message: error.details[0].message,
       });
     }
+    const { name, email, password } = req.body;
+    // 2️⃣ Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -18,7 +25,9 @@ const register = async (req, res) => {
         message: "User already exists!",
       });
     }
+    // 3️⃣ Hash password
     const hashed = await hashPassword(password);
+    // 4️⃣ Create user
     const newUser = await User.create({
       name,
       email,
@@ -40,13 +49,16 @@ const register = async (req, res) => {
 };
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
+    // 1️⃣ Validate incoming data
+    const { error } = loginValidation.validate(req.body);
+    if (error) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required!",
+        message: error.details[0].message,
       });
     }
+    const { email, password } = req.body;
+    // 2️⃣ Find user by email
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
       return res.status(400).json({
@@ -54,6 +66,7 @@ const login = async (req, res) => {
         message: "User not found!",
       });
     }
+    // 3️⃣ Compare password
     const isMatch = await comparePassword(password, existingUser.password);
     if (!isMatch) {
       return res.status(400).json({
@@ -61,6 +74,7 @@ const login = async (req, res) => {
         message: "invalid or wrong password",
       });
     }
+    // 4️⃣ Generate JWT tokens (same as your code)
     // Access token (short-lived)
     const accessToken = jwt.sign(
       { _id: existingUser._id },
