@@ -6,7 +6,7 @@ import helmet from "helmet";
 import "dotenv/config";
 
 import connectDB from "./database/db.js";
-import userRoute from "./routes/user.route.js";
+import userRoute from "./routes/user.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;

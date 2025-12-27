@@ -6,6 +6,10 @@ import {
   registerValidation,
   loginValidation,
 } from "../validation/user.validation.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/token.util.js";
 const register = async (req, res) => {
   try {
     // 1️⃣ Validate incoming data
@@ -74,19 +78,10 @@ const login = async (req, res) => {
         message: "invalid or wrong password",
       });
     }
-    // 4️⃣ Generate JWT tokens (same as your code)
     // Access token (short-lived)
-    const accessToken = jwt.sign(
-      { _id: existingUser._id },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    const accessToken = generateAccessToken({ _id: existingUser._id });
     // Refresh token (long-lived)
-    const refreshToken = jwt.sign(
-      { _id: existingUser._id },
-      process.env.JWT_REFRESH_SECRET_KEY,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN }
-    );
+    const refreshToken = generateRefreshToken({ _id: existingUser._id });
     // Cookie options
     const cookieOptions = {
       httpOnly: true,
@@ -163,11 +158,7 @@ const refreshToken = async (req, res) => {
       });
     }
     // Generate new access token
-    const newAccessToken = jwt.sign(
-      { _id: user._id },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    const newAccessToken = generateAccessToken({ _id: user._id });
     res.status(200).json({
       success: true,
       user,
