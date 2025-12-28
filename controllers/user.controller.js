@@ -79,9 +79,15 @@ const login = async (req, res) => {
       });
     }
     // Access token (short-lived)
-    const accessToken = generateAccessToken({ _id: existingUser._id });
+    const accessToken = generateAccessToken({
+      _id: existingUser._id,
+      role: existingUser.role,
+    });
     // Refresh token (long-lived)
-    const refreshToken = generateRefreshToken({ _id: existingUser._id });
+    const refreshToken = generateRefreshToken({
+      _id: existingUser._id,
+      role: existingUser.role,
+    });
     // Cookie options
     const cookieOptions = {
       httpOnly: true,
@@ -158,7 +164,10 @@ const refreshToken = async (req, res) => {
       });
     }
     // Generate new access token
-    const newAccessToken = generateAccessToken({ _id: user._id });
+    const newAccessToken = generateAccessToken({
+      _id: user._id,
+      role: user.role,
+    });
     res.status(200).json({
       success: true,
       user,

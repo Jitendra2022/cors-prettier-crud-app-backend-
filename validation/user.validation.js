@@ -22,6 +22,10 @@ const registerValidation = Joi.object({
     "string.max": "Password must not exceed 128 characters",
     "any.required": "Password is required",
   }),
+  role: Joi.string().valid("user", "admin").optional().messages({
+    "any.only": "Role must be either user or admin",
+    "string.base": "Role must be a text",
+  }),
 });
 
 // Login validation with custom messages

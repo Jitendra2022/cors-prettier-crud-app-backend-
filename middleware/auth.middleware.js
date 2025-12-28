@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 
+/* ---------------- AUTHENTICATION MIDDLEWARE ---------------- */
 const authenticateJWT = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -18,4 +19,18 @@ const authenticateJWT = (req, res, next) => {
   }
 };
 
-export { authenticateJWT };
+/* ---------------- AUTHORIZATION (ROLE-BASED) MIDDLEWARE ---------------- */
+const verifyRole = (role) => {
+  return (req, res, next) => {
+    const userRole = req.user?.role;
+    if (userRole !== role) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied!",
+      });
+    }
+    // only runs if user exists AND role matches
+    next();
+  };
+};
+export { authenticateJWT, verifyRole };
