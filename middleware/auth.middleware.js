@@ -11,9 +11,16 @@ const authenticateJWT = (req, res, next) => {
     if (!token) {
       return res.status(401).json({ message: "Token missing" });
     }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    req.user = decoded;
-    next();
+    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+      if (err) {
+        if (err.name === "TokenExpiredError") {
+          return res.status(401).json({ message: "Token expired" });
+        }
+        return res.status(403).json({ message: "Invalid token" });
+      }
+      req.user = decoded;
+      next();
+    });
   } catch (err) {
     return res.status(403).json({ message: "Invalid or expired token" });
   }
