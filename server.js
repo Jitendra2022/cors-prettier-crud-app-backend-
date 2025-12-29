@@ -8,6 +8,7 @@ import "dotenv/config";
 import connectDB from "./database/db.js";
 import userRoute from "./routes/user.routes.js";
 import authRoute from "./routes/auth.routes.js";
+import otpRoute from "./routes/otpRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -40,6 +41,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1", userRoute);
 app.use("/api/v1", authRoute);
+app.use("/api/v1", otpRoute);
 
 /* ---------------- 404 HANDLER ---------------- */
 app.use((req, res) => {

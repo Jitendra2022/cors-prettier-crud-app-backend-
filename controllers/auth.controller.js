@@ -20,22 +20,28 @@ const register = async (req, res) => {
         message: error.details[0].message,
       });
     }
-    const { name, email, password } = req.body;
-    // 2️⃣ Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists!",
-      });
-    }
-    // 3️⃣ Hash password
+    const { name, email, password, phone } = req.body;
+    // 2️⃣ Check if email already exists
+    const emailExists = await User.findOne({ email });
+    if (emailExists)
+      return res
+        .status(400)
+        .json({ success: false, message: "Email already in use!" });
+
+    // 3️⃣ Check if phone already exists
+    const phoneExists = await User.findOne({ phone });
+    if (phoneExists)
+      return res
+        .status(400)
+        .json({ success: false, message: "Phone number already in use!" });
+    // 4️⃣ Hash password
     const hashed = await hashPassword(password);
-    // 4️⃣ Create user
+    // 5️⃣ Create user
     const newUser = await User.create({
       name,
       email,
       password: hashed,
+      phone,
     });
     res.status(201).json({
       success: true,
