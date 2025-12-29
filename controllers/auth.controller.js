@@ -147,7 +147,7 @@ const refreshToken = async (req, res) => {
     if (!refreshToken) {
       return res.status(401).json({
         success: false,
-        message: "NO refresh token provided! ",
+        message: "Refresh token not provided! ",
       });
     }
     // Verify refresh token
@@ -174,10 +174,22 @@ const refreshToken = async (req, res) => {
       accessToken: newAccessToken,
     });
   } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token expired, Please log in again.",
+      });
+    }
+    if (err.name === "JsonWebTokenError") {
+      return res.status(403).json({ success: false, message: "Invalid token" });
+    }
     console.error(err);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong!",
+      message:
+        process.env.NODE_ENV === "development"
+          ? "Authentication failed!"
+          : "Something went wrong!",
       error: err.message,
     });
   }

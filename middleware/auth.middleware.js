@@ -11,18 +11,25 @@ const authenticateJWT = (req, res, next) => {
     if (!token) {
       return res.status(401).json({ message: "Token missing" });
     }
-    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
-      if (err) {
-        if (err.name === "TokenExpiredError") {
-          return res.status(401).json({ message: "Token expired" });
-        }
-        return res.status(403).json({ message: "Invalid token" });
-      }
-      req.user = decoded;
-      next();
-    });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    req.user = decoded;
+    next();
   } catch (err) {
-    return res.status(403).json({ message: "Invalid or expired token" });
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ success: false, message: "Token expired" });
+    }
+    if (err.name === "JsonWebTokenError") {
+      return res.status(403).json({ success: false, message: "Invalid token" });
+    }
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message:
+        process.env.NODE_ENV === "development"
+          ? "Authentication failed!"
+          : "Something went wrong!",
+      error: err.message,
+    });
   }
 };
 
