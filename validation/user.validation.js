@@ -55,28 +55,28 @@ const loginValidation = Joi.object({
   }),
 });
 
-const sendOtpEmailValidation = Joi.object({
-  email: Joi.string().email().required().messages({
+// Forgot password validation (email or phone required) with custom messages
+const forgotPasswordValidation = Joi.object({
+  email: Joi.string().email().messages({
     "string.base": "Email must be a text",
-    "string.empty": "Email is required",
     "string.email": "Please provide a valid email address",
-    "any.required": "Email is required",
   }),
-});
-
-const sendOtpValidation = Joi.object({
   phone: Joi.string()
     .pattern(/^\+[1-9]\d{1,14}$/)
-    .required()
     .messages({
       "string.base": "Phone must be text",
-      "string.empty": "Phone number is required",
       "string.pattern.base":
         "Phone must be in international format (+1234567890)",
-      "any.required": "Phone number is required",
     }),
-});
+})
+  // At least one of email or phone must be provided
+  .xor("email", "phone")
+  .messages({
+    "object.missing": "Either email or phone is required",
+    "object.xor": "Provide either email or phone, not both",
+  });
 
+// Verify OTP validation (email or phone + OTP) with custom messages
 const verifyOtpValidation = Joi.object({
   email: Joi.string().email().messages({
     "string.base": "Email must be a text",
@@ -108,10 +108,39 @@ const verifyOtpValidation = Joi.object({
     "object.xor": "Provide either email or phone, not both",
   });
 
+// Reset password validation (email or phone + new password) with custom messages
+const resetPasswordValidation = Joi.object({
+  email: Joi.string().email().messages({
+    "string.base": "Email must be a text",
+    "string.email": "Please provide a valid email address",
+  }),
+
+  phone: Joi.string()
+    .pattern(/^\+[1-9]\d{1,14}$/)
+    .messages({
+      "string.base": "Phone must be text",
+      "string.pattern.base":
+        "Phone must be in international format (+1234567890)",
+    }),
+
+  newPassword: Joi.string().min(6).max(128).required().messages({
+    "string.base": "Password must be a text",
+    "string.empty": "New password is required",
+    "string.min": "Password must be at least 6 characters",
+    "string.max": "Password must not exceed 128 characters",
+    "any.required": "New password is required",
+  }),
+})
+  // At least one of email or phone must be provided
+  .xor("email", "phone")
+  .messages({
+    "object.missing": "Either email or phone is required",
+    "object.xor": "Provide either email or phone, not both",
+  });
 export {
   registerValidation,
   loginValidation,
-  sendOtpEmailValidation,
-  sendOtpValidation,
+  forgotPasswordValidation,
   verifyOtpValidation,
+  resetPasswordValidation,
 };
