@@ -16,9 +16,14 @@ const PORT = process.env.PORT || 8080;
 /* ---------------- SECURITY MIDDLEWARE ---------------- */
 app.use(helmet());
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://cors-prettier-crud-app-backend.vercel.app",
+];
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: allowedOrigins,
     credentials: true,
   })
 );
